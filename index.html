@@ -167,68 +167,65 @@
 
 </div>
 <script>
-const API_KEY = '__ANTHROPIC_API_KEY__';
-const REFRESH = 300;
-let lat=38.9869, lng=-76.9426, radius=5, fuel='Regular Unleaded';
-let busy=false, timer=null, secs=REFRESH;
+  // ── Cloudflare Worker proxy URL ──
+  const PROXY = 'https://gasfinder-proxy.r90601871.workers.dev/';
 
-function setR(r,el){radius=r;document.querySelectorAll('#rc .chip').forEach(c=>c.classList.remove('r-on'));el.classList.add('r-on')}
-function setF(f,el){fuel=f;document.querySelectorAll('#fc .chip').forEach(c=>c.classList.remove('f-on'));el.classList.add('f-on')}
-function cls(p,mn,mx){const r=(mx-mn)||.01,t=(p-mn)/r;return t<.33?'lo':t>.66?'hi':'mid'}
+  const REFRESH = 300;
+  let lat=38.9869, lng=-76.9426, radius=5, fuel='Regular Unleaded';
+  let busy=false, timer=null, secs=REFRESH;
 
-function useGPS(){
-  navigator.geolocation.getCurrentPosition(p=>{
-    lat=p.coords.latitude;lng=p.coords.longitude;
-    document.getElementById('loc-name').textContent='Current GPS Location';
-    document.getElementById('loc-coords').textContent=`Lat ${lat.toFixed(4)} · Lng ${lng.toFixed(4)}`;
-  },()=>alert('GPS failed. Using College Park default.'));
-}
+  function setR(r,el){radius=r;document.querySelectorAll('#rc .chip').forEach(c=>c.classList.remove('r-on'));el.classList.add('r-on')}
+  function setF(f,el){fuel=f;document.querySelectorAll('#fc .chip').forEach(c=>c.classList.remove('f-on'));el.classList.add('f-on')}
+  function cls(p,mn,mx){const r=(mx-mn)||.01,t=(p-mn)/r;return t<.33?'lo':t>.66?'hi':'mid'}
 
-function startTimer(){
-  clearInterval(timer);secs=REFRESH;
-  document.getElementById('rbar').classList.remove('hidden');
-  document.getElementById('btn-now').disabled=false;
-  tick();
-  timer=setInterval(()=>{secs--;tick();if(secs<=0){secs=REFRESH;go();}},1000);
-}
-function tick(){
-  const m=Math.floor(secs/60),s=secs%60;
-  document.getElementById('cd').textContent=`${m}:${String(s).padStart(2,'0')}`;
-  document.getElementById('rprog').style.strokeDashoffset=69.1*(1-secs/REFRESH);
-}
-
-async function go(){
-  if(busy)return;busy=true;secs=REFRESH;
-  document.getElementById('welcome').classList.add('hidden');
-  document.getElementById('search-btn').disabled=true;
-  const nb=document.getElementById('btn-now');if(nb)nb.disabled=true;
-  show(`<div class="loading"><div class="spinner"></div><div class="loading-msg">Fetching live prices near College Park…</div></div>`);
-
-  try{
-    const stations=await claude();
-    render(stations.sort((a,b)=>a.price-b.price));
-    startTimer();
-  }catch(e){
-    show(`<div class="err">⚠️ ${e.message}</div>`);
+  function useGPS(){
+    navigator.geolocation.getCurrentPosition(p=>{
+      lat=p.coords.latitude;lng=p.coords.longitude;
+      document.getElementById('loc-name').textContent='Current GPS Location';
+      document.getElementById('loc-coords').textContent=`Lat ${lat.toFixed(4)} · Lng ${lng.toFixed(4)}`;
+    },()=>alert('GPS failed. Using College Park default.'));
   }
-  busy=false;
-  document.getElementById('search-btn').disabled=false;
-  if(nb)nb.disabled=false;
-}
 
-async function claude(){
-  const res=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'x-api-key':API_KEY,
-      'anthropic-version':'2023-06-01',
-      'anthropic-dangerous-allow-browser':'true'
-    },
-    body:JSON.stringify({
-      model:'claude-haiku-4-5-20251001',
-      max_tokens:1024,
-      messages:[{role:'user',content:`You are a gas price assistant. Location: UMD College Park MD 20742 (lat=${lat.toFixed(4)}, lng=${lng.toFixed(4)}). Fuel: "${fuel}". Radius: ${radius} miles.
+  function startTimer(){
+    clearInterval(timer);secs=REFRESH;
+    document.getElementById('rbar').classList.remove('hidden');
+    document.getElementById('btn-now').disabled=false;
+    tick();
+    timer=setInterval(()=>{secs--;tick();if(secs<=0){secs=REFRESH;go();}},1000);
+  }
+  function tick(){
+    const m=Math.floor(secs/60),s=secs%60;
+    document.getElementById('cd').textContent=`${m}:${String(s).padStart(2,'0')}`;
+    document.getElementById('rprog').style.strokeDashoffset=69.1*(1-secs/REFRESH);
+  }
+
+  async function go(){
+    if(busy)return;busy=true;secs=REFRESH;
+    document.getElementById('welcome').classList.add('hidden');
+    document.getElementById('search-btn').disabled=true;
+    const nb=document.getElementById('btn-now');if(nb)nb.disabled=true;
+    show(`<div class="loading"><div class="spinner"></div><div class="loading-msg">Fetching live prices near College Park…</div></div>`);
+
+    try{
+      const stations=await callClaude();
+      render(stations.sort((a,b)=>a.price-b.price));
+      startTimer();
+    }catch(e){
+      show(`<div class="err">⚠️ ${e.message}</div>`);
+    }
+    busy=false;
+    document.getElementById('search-btn').disabled=false;
+    if(nb)nb.disabled=false;
+  }
+
+  async function callClaude(){
+    const res=await fetch(PROXY,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:1024,
+        messages:[{role:'user',content:`You are a gas price assistant. Location: UMD College Park MD 20742 (lat=${lat.toFixed(4)}, lng=${lng.toFixed(4)}). Fuel: "${fuel}". Radius: ${radius} miles.
 
 Return ONLY a raw JSON array of exactly 9 gas stations — no markdown, no backticks, no explanation.
 Format: [{"name":"Shell","address":"4900 Edmonston Rd, Hyattsville MD","price":3.459,"distance":1.2}]
@@ -240,60 +237,60 @@ Rules:
 - Price spread $0.08–$0.38, BJ's/warehouse clubs cheapest
 - Distances 0.3–${radius} miles
 - price must be a plain number like 3.459`}]
-    })
-  });
-  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${res.status}`);}
-  const d=await res.json();
-  const txt=(d.content?.[0]?.text||'[]').replace(/```json|```/g,'').trim();
-  return JSON.parse(txt);
-}
+      })
+    });
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${res.status}`);}
+    const d=await res.json();
+    const txt=(d.content?.[0]?.text||'[]').replace(/```json|```/g,'').trim();
+    return JSON.parse(txt);
+  }
 
-function show(html){document.getElementById('results').innerHTML=html}
+  function show(html){document.getElementById('results').innerHTML=html}
 
-function render(st){
-  if(!st.length){show('<div class="err">No stations found. Try wider radius.</div>');return;}
-  const mn=st[0].price,mx=st[st.length-1].price;
-  const avg=(st.reduce((a,s)=>a+s.price,0)/st.length).toFixed(3);
-  const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  const b=st[0];
-  let h=`
-    <div class="summary">
-      <div class="scard"><div class="sval g">$${mn.toFixed(3)}</div><div class="slbl">Cheapest</div></div>
-      <div class="scard"><div class="sval">$${avg}</div><div class="slbl">Average</div></div>
-      <div class="scard"><div class="sval r">$${mx.toFixed(3)}</div><div class="slbl">Highest</div></div>
-      <div class="scard"><div class="sval">${st.length}</div><div class="slbl">Stations</div></div>
-    </div>
-    <div class="best">
-      <div class="best-badge">★ Best Deal</div>
-      <div class="best-name">${b.name}</div>
-      <div class="best-addr">${b.address}</div>
-      <div class="best-price-row">
-        <div class="best-price">$${b.price.toFixed(3)}</div>
-        <div class="best-unit">${fuel} · per gallon</div>
+  function render(st){
+    if(!st.length){show('<div class="err">No stations found. Try wider radius.</div>');return;}
+    const mn=st[0].price,mx=st[st.length-1].price;
+    const avg=(st.reduce((a,s)=>a+s.price,0)/st.length).toFixed(3);
+    const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const b=st[0];
+    let h=`
+      <div class="summary">
+        <div class="scard"><div class="sval g">$${mn.toFixed(3)}</div><div class="slbl">Cheapest</div></div>
+        <div class="scard"><div class="sval">$${avg}</div><div class="slbl">Average</div></div>
+        <div class="scard"><div class="sval r">$${mx.toFixed(3)}</div><div class="slbl">Highest</div></div>
+        <div class="scard"><div class="sval">${st.length}</div><div class="slbl">Stations</div></div>
       </div>
-      <div class="best-meta">
-        <span>📍 ${b.distance.toFixed(1)} mi away</span>
-        <span>💰 Save $${(mx-b.price).toFixed(3)}/gal vs highest</span>
+      <div class="best">
+        <div class="best-badge">★ Best Deal</div>
+        <div class="best-name">${b.name}</div>
+        <div class="best-addr">${b.address}</div>
+        <div class="best-price-row">
+          <div class="best-price">$${b.price.toFixed(3)}</div>
+          <div class="best-unit">${fuel} · per gallon</div>
+        </div>
+        <div class="best-meta">
+          <span>📍 ${b.distance.toFixed(1)} mi away</span>
+          <span>💰 Save $${(mx-b.price).toFixed(3)}/gal vs highest</span>
+        </div>
       </div>
-    </div>
-    <div class="list-hdr"><div class="list-title">All Stations Ranked</div></div>
-    <div class="stations">`;
-  st.forEach((s,i)=>{
-    h+=`<div class="srow" style="animation-delay:${i*.04}s">
-      <div class="srank">#${i+1}</div>
-      <div class="sinfo">
-        <div class="sname">${s.name}</div>
-        <div class="saddr">${s.address}</div>
-        <div class="sdist">📍 ${s.distance.toFixed(1)} mi</div>
-      </div>
-      <div class="sprice ${cls(s.price,mn,mx)}">$${s.price.toFixed(3)}</div>
-    </div>`;
-  });
-  h+=`</div><div class="foot-row"><span>Updated ${now}</span><span class="src-tag ai">🤖 Claude AI · MD market data</span></div>`;
-  show(h);
-}
+      <div class="list-hdr"><div class="list-title">All Stations Ranked</div></div>
+      <div class="stations">`;
+    st.forEach((s,i)=>{
+      h+=`<div class="srow" style="animation-delay:${i*.04}s">
+        <div class="srank">#${i+1}</div>
+        <div class="sinfo">
+          <div class="sname">${s.name}</div>
+          <div class="saddr">${s.address}</div>
+          <div class="sdist">📍 ${s.distance.toFixed(1)} mi</div>
+        </div>
+        <div class="sprice ${cls(s.price,mn,mx)}">$${s.price.toFixed(3)}</div>
+      </div>`;
+    });
+    h+=`</div><div class="foot-row"><span>Updated ${now}</span><span class="src-tag ai">🤖 Claude AI · MD market data</span></div>`;
+    show(h);
+  }
 
-window.addEventListener('load',()=>go());
+  window.addEventListener('load',()=>go());
 </script>
 </body>
 </html>
