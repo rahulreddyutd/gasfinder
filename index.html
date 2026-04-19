@@ -69,7 +69,6 @@
     .sval.g{color:var(--green)}
     .sval.r{color:var(--red)}
     .best{background:linear-gradient(135deg,rgba(46,207,123,.09),rgba(46,207,123,.03));border:1px solid rgba(46,207,123,.25);border-radius:20px;padding:22px;margin-bottom:12px;position:relative;overflow:hidden}
-    .best::after{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:rgba(46,207,123,.05);pointer-events:none}
     .best-badge{display:inline-flex;align-items:center;gap:5px;background:var(--green2);color:#fff;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 10px;border-radius:20px;margin-bottom:12px}
     .best-name{font-size:20px;font-weight:600;margin-bottom:3px}
     .best-addr{font-size:12px;color:var(--muted2);margin-bottom:16px}
@@ -91,8 +90,9 @@
     .sprice{font-family:'Bebas Neue',cursive;font-size:30px;flex-shrink:0}
     .sprice.lo{color:var(--green)}.sprice.hi{color:var(--red)}.sprice.mid{color:var(--text)}
     .foot-row{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:11px;color:var(--muted)}
-    .src-tag{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:10px;color:var(--muted)}
-    .src-tag.ai{border-color:rgba(77,166,255,.3);color:var(--blue)}
+    .src-tag{border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600}
+    .src-live{background:rgba(46,207,123,.1);border:1px solid rgba(46,207,123,.3);color:var(--green)}
+    .src-ai{background:rgba(77,166,255,.1);border:1px solid rgba(77,166,255,.3);color:var(--blue)}
     .welcome{text-align:center;padding:40px 16px}
     .welcome-icon{font-size:60px;margin-bottom:16px}
     .welcome h2{font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:1px;margin-bottom:8px}
@@ -106,7 +106,7 @@
   <div class="header">
     <div class="eyebrow"><span class="live-dot"></span> Live Prices · Auto-Refresh</div>
     <h1>GAS<br>FINDER</h1>
-    <p class="header-sub">Cheapest gas near College Park, MD — refreshes every 5 min</p>
+    <p class="header-sub">Real prices near College Park, MD — refreshes every 5 min</p>
     <div class="deco">⛽</div>
   </div>
 
@@ -116,20 +116,9 @@
       <div class="loc-box">
         <span style="font-size:18px">📍</span>
         <div>
-          <div class="loc-name" id="loc-name">UMD College Park, MD 20742</div>
-          <div class="loc-coords" id="loc-coords">Lat 38.9869 · Lng -76.9426</div>
+          <div class="loc-name">UMD College Park, MD 20742</div>
+          <div class="loc-coords">Lat 38.9869 · Lng -76.9426</div>
         </div>
-      </div>
-      <button class="btn btn-gps" onclick="useGPS()">🛰️ Use My Current GPS Location</button>
-    </div>
-    <div class="divider"></div>
-    <div class="cfg-sec">
-      <div class="cfg-label">🔵 Search Radius</div>
-      <div class="chips" id="rc">
-        <button class="chip" onclick="setR(2,this)">2 miles</button>
-        <button class="chip r-on" onclick="setR(5,this)">5 miles</button>
-        <button class="chip" onclick="setR(10,this)">10 miles</button>
-        <button class="chip" onclick="setR(15,this)">15 miles</button>
       </div>
     </div>
     <div class="divider"></div>
@@ -162,135 +151,132 @@
   <div class="welcome" id="welcome">
     <div class="welcome-icon">⛽</div>
     <h2>Ready to Save on Gas</h2>
-    <p>Hit the button above to fetch live prices within 5 miles of UMD College Park.</p>
+    <p>Hit the button above to fetch real prices near UMD College Park.</p>
   </div>
 
 </div>
 <script>
-  // ── Cloudflare Worker proxy URL ──
-  const PROXY = 'https://gasfinder-proxy.r90601871.workers.dev/';
+  var PROXY = 'https://gasfinder-proxy.r90601871.workers.dev';
+  var REFRESH = 300;
+  var fuel = 'Regular Unleaded';
+  var busy = false, timer = null, secs = REFRESH;
 
-  const REFRESH = 300;
-  let lat=38.9869, lng=-76.9426, radius=5, fuel='Regular Unleaded';
-  let busy=false, timer=null, secs=REFRESH;
-
-  function setR(r,el){radius=r;document.querySelectorAll('#rc .chip').forEach(c=>c.classList.remove('r-on'));el.classList.add('r-on')}
-  function setF(f,el){fuel=f;document.querySelectorAll('#fc .chip').forEach(c=>c.classList.remove('f-on'));el.classList.add('f-on')}
-  function cls(p,mn,mx){const r=(mx-mn)||.01,t=(p-mn)/r;return t<.33?'lo':t>.66?'hi':'mid'}
-
-  function useGPS(){
-    navigator.geolocation.getCurrentPosition(p=>{
-      lat=p.coords.latitude;lng=p.coords.longitude;
-      document.getElementById('loc-name').textContent='Current GPS Location';
-      document.getElementById('loc-coords').textContent=`Lat ${lat.toFixed(4)} · Lng ${lng.toFixed(4)}`;
-    },()=>alert('GPS failed. Using College Park default.'));
+  function setF(f, el) {
+    fuel = f;
+    document.querySelectorAll('#fc .chip').forEach(function(c) { c.classList.remove('f-on'); });
+    el.classList.add('f-on');
   }
 
-  function startTimer(){
-    clearInterval(timer);secs=REFRESH;
+  function cls(p, mn, mx) {
+    var r = (mx - mn) || 0.01;
+    var t = (p - mn) / r;
+    return t < 0.33 ? 'lo' : t > 0.66 ? 'hi' : 'mid';
+  }
+
+  function startTimer() {
+    clearInterval(timer);
+    secs = REFRESH;
     document.getElementById('rbar').classList.remove('hidden');
-    document.getElementById('btn-now').disabled=false;
+    document.getElementById('btn-now').disabled = false;
     tick();
-    timer=setInterval(()=>{secs--;tick();if(secs<=0){secs=REFRESH;go();}},1000);
-  }
-  function tick(){
-    const m=Math.floor(secs/60),s=secs%60;
-    document.getElementById('cd').textContent=`${m}:${String(s).padStart(2,'0')}`;
-    document.getElementById('rprog').style.strokeDashoffset=69.1*(1-secs/REFRESH);
+    timer = setInterval(function() {
+      secs--;
+      tick();
+      if (secs <= 0) { secs = REFRESH; go(); }
+    }, 1000);
   }
 
-  async function go(){
-    if(busy)return;busy=true;secs=REFRESH;
+  function tick() {
+    var m = Math.floor(secs / 60);
+    var s = secs % 60;
+    document.getElementById('cd').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+    document.getElementById('rprog').style.strokeDashoffset = (69.1 * (1 - secs / REFRESH));
+  }
+
+  async function go() {
+    if (busy) return;
+    busy = true;
+    secs = REFRESH;
     document.getElementById('welcome').classList.add('hidden');
-    document.getElementById('search-btn').disabled=true;
-    const nb=document.getElementById('btn-now');if(nb)nb.disabled=true;
-    show(`<div class="loading"><div class="spinner"></div><div class="loading-msg">Fetching live prices near College Park…</div></div>`);
+    document.getElementById('search-btn').disabled = true;
+    var nb = document.getElementById('btn-now');
+    if (nb) nb.disabled = true;
+    show('<div class="loading"><div class="spinner"></div><div class="loading-msg">Fetching real prices from iExit near College Park...</div></div>');
 
-    try{
-      const stations=await callClaude();
-      render(stations.sort((a,b)=>a.price-b.price));
+    try {
+      var fuelParam = encodeURIComponent(fuel);
+      var res = await fetch(PROXY + '/prices?fuel=' + fuelParam);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var json = await res.json();
+      var stations = json.stations || [];
+      if (!stations.length) throw new Error('No stations returned');
+      stations.sort(function(a, b) { return a.price - b.price; });
+      render(stations, json.source);
       startTimer();
-    }catch(e){
-      show(`<div class="err">⚠️ ${e.message}</div>`);
+    } catch (e) {
+      show('<div class="err">Failed to fetch prices: ' + e.message + '</div>');
     }
-    busy=false;
-    document.getElementById('search-btn').disabled=false;
-    if(nb)nb.disabled=false;
+
+    busy = false;
+    document.getElementById('search-btn').disabled = false;
+    if (nb) nb.disabled = false;
   }
 
-  async function callClaude(){
-    const res=await fetch(PROXY,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-haiku-4-5-20251001',
-        max_tokens:1024,
-        messages:[{role:'user',content:`You are a gas price assistant. Location: UMD College Park MD 20742 (lat=${lat.toFixed(4)}, lng=${lng.toFixed(4)}). Fuel: "${fuel}". Radius: ${radius} miles.
-
-Return ONLY a raw JSON array of exactly 9 gas stations — no markdown, no backticks, no explanation.
-Format: [{"name":"Shell","address":"4900 Edmonston Rd, Hyattsville MD","price":3.459,"distance":1.2}]
-
-Rules:
-- Use real brand names: Shell, Chevron, BP, Mobil, Wawa, Royal Farms, Giant Food, BJ's Wholesale, Sunoco, Valero, Circle K
-- Addresses in College Park/Hyattsville/Greenbelt/Beltsville/Riverdale/Laurel MD
-- Realistic Maryland prices for ${new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'})}
-- Price spread $0.08–$0.38, BJ's/warehouse clubs cheapest
-- Distances 0.3–${radius} miles
-- price must be a plain number like 3.459`}]
-      })
-    });
-    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${res.status}`);}
-    const d=await res.json();
-    const txt=(d.content?.[0]?.text||'[]').replace(/```json|```/g,'').trim();
-    return JSON.parse(txt);
+  function show(html) {
+    document.getElementById('results').innerHTML = html;
   }
 
-  function show(html){document.getElementById('results').innerHTML=html}
+  function render(st, source) {
+    if (!st.length) { show('<div class="err">No stations found.</div>'); return; }
+    var mn = st[0].price;
+    var mx = st[st.length - 1].price;
+    var sum = 0;
+    for (var i = 0; i < st.length; i++) sum += st[i].price;
+    var avg = (sum / st.length).toFixed(3);
+    var now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    var b = st[0];
+    var isLive = source === 'iExit';
+    var srcTag = isLive
+      ? '<span class="src-tag src-live">🟢 iExit Live Data</span>'
+      : '<span class="src-tag src-ai">🤖 Claude AI Estimate</span>';
 
-  function render(st){
-    if(!st.length){show('<div class="err">No stations found. Try wider radius.</div>');return;}
-    const mn=st[0].price,mx=st[st.length-1].price;
-    const avg=(st.reduce((a,s)=>a+s.price,0)/st.length).toFixed(3);
-    const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    const b=st[0];
-    let h=`
-      <div class="summary">
-        <div class="scard"><div class="sval g">$${mn.toFixed(3)}</div><div class="slbl">Cheapest</div></div>
-        <div class="scard"><div class="sval">$${avg}</div><div class="slbl">Average</div></div>
-        <div class="scard"><div class="sval r">$${mx.toFixed(3)}</div><div class="slbl">Highest</div></div>
-        <div class="scard"><div class="sval">${st.length}</div><div class="slbl">Stations</div></div>
-      </div>
-      <div class="best">
-        <div class="best-badge">★ Best Deal</div>
-        <div class="best-name">${b.name}</div>
-        <div class="best-addr">${b.address}</div>
-        <div class="best-price-row">
-          <div class="best-price">$${b.price.toFixed(3)}</div>
-          <div class="best-unit">${fuel} · per gallon</div>
-        </div>
-        <div class="best-meta">
-          <span>📍 ${b.distance.toFixed(1)} mi away</span>
-          <span>💰 Save $${(mx-b.price).toFixed(3)}/gal vs highest</span>
-        </div>
-      </div>
-      <div class="list-hdr"><div class="list-title">All Stations Ranked</div></div>
-      <div class="stations">`;
-    st.forEach((s,i)=>{
-      h+=`<div class="srow" style="animation-delay:${i*.04}s">
-        <div class="srank">#${i+1}</div>
-        <div class="sinfo">
-          <div class="sname">${s.name}</div>
-          <div class="saddr">${s.address}</div>
-          <div class="sdist">📍 ${s.distance.toFixed(1)} mi</div>
-        </div>
-        <div class="sprice ${cls(s.price,mn,mx)}">$${s.price.toFixed(3)}</div>
-      </div>`;
-    });
-    h+=`</div><div class="foot-row"><span>Updated ${now}</span><span class="src-tag ai">🤖 Claude AI · MD market data</span></div>`;
+    var h = '<div class="summary">'
+      + '<div class="scard"><div class="sval g">$' + mn.toFixed(3) + '</div><div class="slbl">Cheapest</div></div>'
+      + '<div class="scard"><div class="sval">$' + avg + '</div><div class="slbl">Average</div></div>'
+      + '<div class="scard"><div class="sval r">$' + mx.toFixed(3) + '</div><div class="slbl">Highest</div></div>'
+      + '<div class="scard"><div class="sval">' + st.length + '</div><div class="slbl">Stations</div></div>'
+      + '</div>'
+      + '<div class="best">'
+      + '<div class="best-badge">★ Best Deal</div>'
+      + '<div class="best-name">' + b.name + '</div>'
+      + '<div class="best-addr">' + b.address + '</div>'
+      + '<div class="best-price-row"><div class="best-price">$' + b.price.toFixed(3) + '</div>'
+      + '<div class="best-unit">' + fuel + ' · per gallon</div></div>'
+      + '<div class="best-meta">'
+      + '<span>📍 ' + b.distance.toFixed(1) + ' mi away</span>'
+      + '<span>💰 Save $' + (mx - b.price).toFixed(3) + '/gal vs highest</span>'
+      + '</div></div>'
+      + '<div class="list-hdr"><div class="list-title">All Stations Ranked</div></div>'
+      + '<div class="stations">';
+
+    for (var i = 0; i < st.length; i++) {
+      var s = st[i];
+      h += '<div class="srow" style="animation-delay:' + (i * 0.04) + 's">'
+        + '<div class="srank">#' + (i + 1) + '</div>'
+        + '<div class="sinfo">'
+        + '<div class="sname">' + s.name + '</div>'
+        + '<div class="saddr">' + s.address + '</div>'
+        + '<div class="sdist">📍 ' + s.distance.toFixed(1) + ' mi</div>'
+        + '</div>'
+        + '<div class="sprice ' + cls(s.price, mn, mx) + '">$' + s.price.toFixed(3) + '</div>'
+        + '</div>';
+    }
+
+    h += '</div><div class="foot-row"><span>Updated ' + now + '</span>' + srcTag + '</div>';
     show(h);
   }
 
-  window.addEventListener('load',()=>go());
+  window.addEventListener('load', function() { go(); });
 </script>
 </body>
 </html>
