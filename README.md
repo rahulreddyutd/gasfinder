@@ -57,46 +57,6 @@ Cloudflare Worker (gasfinder-proxy)
 
 ---
 
-## 🚀 Setup Guide
-
-### Step 1 — Create GitHub repo
-1. Go to https://github.com/new
-2. Name it `gasfinder`, set **Public**, click **Create repository**
-
-### Step 2 — Upload files
-Upload `index.html` and `README.md` to the repo root.
-
-### Step 3 — Create workflow file
-Create `.github/workflows/deploy.yml` and paste the contents of `deploy.yml`.
-
-### Step 4 — Add Claude API secret
-1. Repo → **Settings → Secrets and variables → Actions**
-2. Click **New repository secret**
-3. Name: `ANTHROPIC_API_KEY`
-4. Value: your Claude API key from https://console.anthropic.com
-5. Click **Add secret**
-
-### Step 5 — Enable GitHub Pages
-1. Repo → **Settings → Pages**
-2. Source → **GitHub Actions** → Save
-
-### Step 6 — Deploy
-Go to **Actions → Build & Deploy GasFinder → Run workflow**
-
-### Step 7 — Set up Cloudflare Worker
-1. Sign up free at https://cloudflare.com
-2. Go to **Workers & Pages → Create → Start with Hello World**
-3. Name it `gasfinder-proxy`
-4. Paste the contents of `worker.js`
-5. Click **Deploy**
-6. Go to **Settings → Variables and Secrets → Add**
-   - Type: **Secret**
-   - Name: `ANTHROPIC_API_KEY`
-   - Value: your Claude API key
-7. Click **Deploy**
-
----
-
 ## 📁 File Structure
 
 ```
