@@ -8,7 +8,7 @@ Powered by the **U.S. Energy Information Administration (EIA)** — official US 
 ## 🌐 Live Site
 
 ```
-https://YOUR_USERNAME.github.io/gasfinder
+https://rahulreddyutd.github.io/gasfinder/
 ```
 
 ---
