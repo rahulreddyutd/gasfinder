@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GasFinder — Live Gas Prices Near UMD</title>
+  <title>GasFinder — Live Gas Prices Near You</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛽</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -31,9 +31,29 @@
     .cfg-sec:last-child{margin-bottom:0}
     .cfg-label{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
     .divider{height:1px;background:var(--border);margin:16px 0}
-    .loc-box{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px}
-    .loc-name{font-size:14px;font-weight:500}
-    .loc-coords{font-size:11px;color:var(--muted);margin-top:2px}
+
+    /* Search box */
+    .search-wrap{position:relative;margin-bottom:10px}
+    .search-input{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:12px 44px 12px 14px;outline:none;transition:border-color .15s}
+    .search-input::placeholder{color:var(--muted)}
+    .search-input:focus{border-color:var(--accent)}
+    .search-go{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:4px;color:var(--accent)}
+    .loc-active{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid rgba(46,207,123,.25);border-radius:12px;padding:10px 14px}
+    .loc-active-name{font-size:13px;font-weight:500;color:var(--green)}
+    .loc-active-sub{font-size:11px;color:var(--muted);margin-top:1px}
+    .loc-clear{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 4px;line-height:1}
+    .loc-clear:hover{color:var(--red)}
+    .btn-gps{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px 16px;border-radius:12px;border:1px solid var(--border2);background:var(--card2);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;margin-top:8px}
+    .btn-gps:hover{border-color:var(--blue);color:var(--blue)}
+
+    /* Suggestions dropdown */
+    .suggestions{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--border2);border-radius:12px;z-index:100;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+    .suggestion-item{padding:11px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);transition:background .1s}
+    .suggestion-item:last-child{border-bottom:none}
+    .suggestion-item:hover{background:var(--card2)}
+    .suggestion-main{font-weight:500;color:var(--text)}
+    .suggestion-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
     .chips{display:flex;gap:7px;flex-wrap:wrap}
     .chip{padding:7px 14px;border-radius:30px;border:1px solid var(--border2);background:var(--card);color:var(--muted2);cursor:pointer;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
     .chip:hover{border-color:var(--accent);color:var(--accent)}
@@ -44,8 +64,6 @@
     .btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 28px rgba(245,166,35,.38)}
     .btn-primary:active:not(:disabled){transform:translateY(0)}
     .btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
-    .btn-gps{background:var(--card2);color:var(--text);border:1px solid var(--border2);font-size:13px;padding:11px 16px;margin-bottom:10px}
-    .btn-gps:hover{border-color:var(--blue);color:var(--blue)}
     .refresh-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:20px;font-size:12px;color:var(--muted2)}
     .refresh-bar.hidden{display:none}
     .ring-wrap{width:28px;height:28px;flex-shrink:0}
@@ -90,9 +108,7 @@
     .sprice{font-family:'Bebas Neue',cursive;font-size:30px;flex-shrink:0}
     .sprice.lo{color:var(--green)}.sprice.hi{color:var(--red)}.sprice.mid{color:var(--text)}
     .foot-row{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:11px;color:var(--muted)}
-    .src-tag{border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600}
-    .src-live{background:rgba(46,207,123,.1);border:1px solid rgba(46,207,123,.3);color:var(--green)}
-    .src-ai{background:rgba(77,166,255,.1);border:1px solid rgba(77,166,255,.3);color:var(--blue)}
+    .src-tag{border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;background:rgba(46,207,123,.1);border:1px solid rgba(46,207,123,.3);color:var(--green)}
     .welcome{text-align:center;padding:40px 16px}
     .welcome-icon{font-size:60px;margin-bottom:16px}
     .welcome h2{font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:1px;margin-bottom:8px}
@@ -106,22 +122,57 @@
   <div class="header">
     <div class="eyebrow"><span class="live-dot"></span> Live Prices · Auto-Refresh</div>
     <h1>GAS<br>FINDER</h1>
-    <p class="header-sub">Real prices near College Park, MD — refreshes every 5 min</p>
+    <p class="header-sub">Search any US city or ZIP — real EIA government prices</p>
     <div class="deco">⛽</div>
   </div>
 
   <div class="config-card">
+
+    <!-- Location Search -->
     <div class="cfg-sec">
       <div class="cfg-label">📍 Location</div>
-      <div class="loc-box">
-        <span style="font-size:18px">📍</span>
+
+      <!-- Active location display -->
+      <div id="loc-active" class="loc-active hidden">
+        <span style="font-size:16px">📍</span>
         <div>
-          <div class="loc-name">UMD College Park, MD 20742</div>
-          <div class="loc-coords">Lat 38.9869 · Lng -76.9426</div>
+          <div class="loc-active-name" id="loc-active-name"></div>
+          <div class="loc-active-sub" id="loc-active-sub"></div>
         </div>
+        <button class="loc-clear" onclick="clearLocation()" title="Change location">✕</button>
+      </div>
+
+      <!-- Search input -->
+      <div class="search-wrap" id="search-wrap">
+        <input class="search-input" id="search-input"
+          type="text"
+          placeholder="Enter city, state or ZIP code..."
+          autocomplete="off"
+          oninput="onSearchInput()"
+          onkeydown="onSearchKey(event)" />
+        <button class="search-go" onclick="doSearch()">🔍</button>
+        <div class="suggestions hidden" id="suggestions"></div>
+      </div>
+
+      <button class="btn-gps" onclick="useGPS()">🛰️ Use My Current GPS Location</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Radius -->
+    <div class="cfg-sec">
+      <div class="cfg-label">🔵 Search Radius</div>
+      <div class="chips" id="rc">
+        <button class="chip" onclick="setR(2,this)">2 miles</button>
+        <button class="chip r-on" onclick="setR(5,this)">5 miles</button>
+        <button class="chip" onclick="setR(10,this)">10 miles</button>
+        <button class="chip" onclick="setR(15,this)">15 miles</button>
       </div>
     </div>
+
     <div class="divider"></div>
+
+    <!-- Fuel -->
     <div class="cfg-sec">
       <div class="cfg-label">⛽ Fuel Type</div>
       <div class="chips" id="fc">
@@ -131,7 +182,9 @@
         <button class="chip" onclick="setF('Diesel',this)">Diesel</button>
       </div>
     </div>
+
     <div class="divider"></div>
+
     <button class="btn btn-primary" id="search-btn" onclick="go()">⚡ Find Cheapest Gas Now</button>
   </div>
 
@@ -150,8 +203,8 @@
 
   <div class="welcome" id="welcome">
     <div class="welcome-icon">⛽</div>
-    <h2>Ready to Save on Gas</h2>
-    <p>Hit the button above to fetch real prices near UMD College Park.</p>
+    <h2>Find Gas Anywhere in the US</h2>
+    <p>Search any city, state or ZIP code above to find the cheapest gas prices near you.</p>
   </div>
 
 </div>
@@ -159,62 +212,193 @@
   var PROXY = 'https://gasfinder-proxy.r90601871.workers.dev';
   var REFRESH = 300;
   var fuel = 'Regular Unleaded';
+  var radius = 5;
   var busy = false, timer = null, secs = REFRESH;
+  var currentLat = null, currentLng = null, currentLocationName = '', currentState = '';
+  var searchTimeout = null;
 
-  function setF(f, el) {
-    fuel = f;
-    document.querySelectorAll('#fc .chip').forEach(function(c) { c.classList.remove('f-on'); });
-    el.classList.add('f-on');
+  // ── Radius & Fuel ──
+  function setR(r,el){radius=r;document.querySelectorAll('#rc .chip').forEach(function(c){c.classList.remove('r-on')});el.classList.add('r-on')}
+  function setF(f,el){fuel=f;document.querySelectorAll('#fc .chip').forEach(function(c){c.classList.remove('f-on')});el.classList.add('f-on')}
+  function cls(p,mn,mx){var r=(mx-mn)||.01,t=(p-mn)/r;return t<.33?'lo':t>.66?'hi':'mid'}
+
+  // ── Location search ──
+  function onSearchInput() {
+    clearTimeout(searchTimeout);
+    var val = document.getElementById('search-input').value.trim();
+    if (val.length < 2) { hideSuggestions(); return; }
+    searchTimeout = setTimeout(function() { fetchSuggestions(val); }, 350);
   }
 
-  function cls(p, mn, mx) {
-    var r = (mx - mn) || 0.01;
-    var t = (p - mn) / r;
-    return t < 0.33 ? 'lo' : t > 0.66 ? 'hi' : 'mid';
+  function onSearchKey(e) {
+    if (e.key === 'Enter') { doSearch(); }
+    if (e.key === 'Escape') { hideSuggestions(); }
   }
 
-  function startTimer() {
+  function fetchSuggestions(query) {
+    // Use Nominatim (OpenStreetMap) free geocoding - no key needed
+    var url = 'https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&limit=5&q=' + encodeURIComponent(query);
+    fetch(url, { headers: { 'Accept-Language': 'en' } })
+      .then(function(r){ return r.json(); })
+      .then(function(data) { showSuggestions(data); })
+      .catch(function(){ hideSuggestions(); });
+  }
+
+  function showSuggestions(data) {
+    var box = document.getElementById('suggestions');
+    if (!data || !data.length) { hideSuggestions(); return; }
+    var html = '';
+    for (var i = 0; i < Math.min(data.length, 5); i++) {
+      var item = data[i];
+      var parts = item.display_name.split(',');
+      var main = parts[0].trim();
+      var sub = parts.slice(1, 3).join(',').trim();
+      html += '<div class="suggestion-item" onclick="selectLocation(' + item.lat + ',' + item.lon + ',\'' + escStr(item.display_name) + '\')">'
+        + '<div class="suggestion-main">' + main + '</div>'
+        + '<div class="suggestion-sub">' + sub + '</div>'
+        + '</div>';
+    }
+    box.innerHTML = html;
+    box.classList.remove('hidden');
+  }
+
+  function escStr(s) {
+    return s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  }
+
+  function hideSuggestions() {
+    document.getElementById('suggestions').classList.add('hidden');
+  }
+
+  function doSearch() {
+    var val = document.getElementById('search-input').value.trim();
+    if (!val) return;
+    fetchSuggestions(val);
+  }
+
+  function selectLocation(lat, lng, displayName) {
+    currentLat = parseFloat(lat);
+    currentLng = parseFloat(lng);
+    var parts = displayName.split(',');
+    currentLocationName = parts.slice(0, 2).join(',').trim();
+    // Extract state for EIA lookup
+    currentState = extractState(displayName);
+
+    // Show active location
+    document.getElementById('loc-active-name').textContent = currentLocationName;
+    document.getElementById('loc-active-sub').textContent = 'Lat ' + currentLat.toFixed(4) + ' · Lng ' + currentLng.toFixed(4);
+    document.getElementById('loc-active').classList.remove('hidden');
+    document.getElementById('search-wrap').classList.add('hidden');
+    hideSuggestions();
+    document.getElementById('search-input').value = '';
+  }
+
+  function extractState(displayName) {
+    var stateMap = {
+      'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA',
+      'Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA',
+      'Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA',
+      'Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD',
+      'Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS',
+      'Missouri':'MO','Montana':'MT','Nebraska':'NE','Nevada':'NV','New Hampshire':'NH',
+      'New Jersey':'NJ','New Mexico':'NM','New York':'NY','North Carolina':'NC',
+      'North Dakota':'ND','Ohio':'OH','Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA',
+      'Rhode Island':'RI','South Carolina':'SC','South Dakota':'SD','Tennessee':'TN',
+      'Texas':'TX','Utah':'UT','Vermont':'VT','Virginia':'VA','Washington':'WA',
+      'West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY','District of Columbia':'DC'
+    };
+    for (var state in stateMap) {
+      if (displayName.indexOf(state) !== -1) return stateMap[state];
+    }
+    return 'MD'; // default
+  }
+
+  function clearLocation() {
+    currentLat = null; currentLng = null; currentLocationName = ''; currentState = '';
+    document.getElementById('loc-active').classList.add('hidden');
+    document.getElementById('search-wrap').classList.remove('hidden');
+    document.getElementById('results').innerHTML = '';
+    document.getElementById('welcome').classList.remove('hidden');
+    document.getElementById('rbar').classList.add('hidden');
     clearInterval(timer);
-    secs = REFRESH;
+  }
+
+  function useGPS() {
+    if (!navigator.geolocation) { alert('GPS not supported by your browser.'); return; }
+    var btn = document.querySelector('.btn-gps');
+    btn.textContent = '📡 Detecting...';
+    btn.disabled = true;
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      currentLat = pos.coords.latitude;
+      currentLng = pos.coords.longitude;
+      // Reverse geocode
+      var url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' + currentLat + '&lon=' + currentLng;
+      fetch(url, { headers: { 'Accept-Language': 'en' } })
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+          var city = (data.address && (data.address.city || data.address.town || data.address.county)) || 'Your Location';
+          var state = (data.address && data.address.state) || '';
+          currentLocationName = city + (state ? ', ' + state : '');
+          currentState = extractState(state);
+          document.getElementById('loc-active-name').textContent = currentLocationName;
+          document.getElementById('loc-active-sub').textContent = 'Lat ' + currentLat.toFixed(4) + ' · Lng ' + currentLng.toFixed(4);
+          document.getElementById('loc-active').classList.remove('hidden');
+          document.getElementById('search-wrap').classList.add('hidden');
+          btn.textContent = '🛰️ Use My Current GPS Location';
+          btn.disabled = false;
+        });
+    }, function() {
+      alert('Could not access GPS.');
+      btn.textContent = '🛰️ Use My Current GPS Location';
+      btn.disabled = false;
+    });
+  }
+
+  // ── Timer ──
+  function startTimer() {
+    clearInterval(timer); secs = REFRESH;
     document.getElementById('rbar').classList.remove('hidden');
     document.getElementById('btn-now').disabled = false;
     tick();
-    timer = setInterval(function() {
-      secs--;
-      tick();
-      if (secs <= 0) { secs = REFRESH; go(); }
-    }, 1000);
+    timer = setInterval(function() { secs--; tick(); if (secs <= 0) { secs = REFRESH; go(); } }, 1000);
   }
-
   function tick() {
-    var m = Math.floor(secs / 60);
-    var s = secs % 60;
-    document.getElementById('cd').textContent = m + ':' + (s < 10 ? '0' : '') + s;
-    document.getElementById('rprog').style.strokeDashoffset = (69.1 * (1 - secs / REFRESH));
+    var m = Math.floor(secs/60), s = secs%60;
+    document.getElementById('cd').textContent = m + ':' + (s<10?'0':'') + s;
+    document.getElementById('rprog').style.strokeDashoffset = 69.1*(1-secs/REFRESH);
   }
 
+  // ── Fetch ──
   async function go() {
     if (busy) return;
-    busy = true;
-    secs = REFRESH;
+    if (!currentLat || !currentLng) {
+      alert('Please search for a location first!');
+      return;
+    }
+    busy = true; secs = REFRESH;
     document.getElementById('welcome').classList.add('hidden');
     document.getElementById('search-btn').disabled = true;
-    var nb = document.getElementById('btn-now');
-    if (nb) nb.disabled = true;
-    show('<div class="loading"><div class="spinner"></div><div class="loading-msg">Fetching real prices from iExit near College Park...</div></div>');
+    var nb = document.getElementById('btn-now'); if (nb) nb.disabled = true;
+    show('<div class="loading"><div class="spinner"></div><div class="loading-msg">Fetching live prices near ' + currentLocationName + '…</div></div>');
 
     try {
-      var fuelParam = encodeURIComponent(fuel);
-      var res = await fetch(PROXY + '/prices?fuel=' + fuelParam);
+      var params = '?fuel=' + encodeURIComponent(fuel)
+        + '&lat=' + currentLat
+        + '&lng=' + currentLng
+        + '&state=' + (currentState || 'MD')
+        + '&location=' + encodeURIComponent(currentLocationName)
+        + '&radius=' + radius;
+      var res = await fetch(PROXY + '/prices' + params);
       if (!res.ok) throw new Error('HTTP ' + res.status);
       var json = await res.json();
+      if (json.error) throw new Error(json.error);
       var stations = json.stations || [];
-      if (!stations.length) throw new Error('No stations returned');
-      stations.sort(function(a, b) { return a.price - b.price; });
+      if (!stations.length) throw new Error('No stations found');
+      stations.sort(function(a,b){ return a.price - b.price; });
       render(stations, json.source);
       startTimer();
-    } catch (e) {
-      show('<div class="err">Failed to fetch prices: ' + e.message + '</div>');
+    } catch(e) {
+      show('<div class="err">⚠️ ' + e.message + '</div>');
     }
 
     busy = false;
@@ -222,23 +406,14 @@
     if (nb) nb.disabled = false;
   }
 
-  function show(html) {
-    document.getElementById('results').innerHTML = html;
-  }
+  function show(html) { document.getElementById('results').innerHTML = html; }
 
   function render(st, source) {
     if (!st.length) { show('<div class="err">No stations found.</div>'); return; }
-    var mn = st[0].price;
-    var mx = st[st.length - 1].price;
-    var sum = 0;
-    for (var i = 0; i < st.length; i++) sum += st[i].price;
-    var avg = (sum / st.length).toFixed(3);
-    var now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    var mn = st[0].price, mx = st[st.length-1].price;
+    var avg = (st.reduce(function(a,s){return a+s.price;},0)/st.length).toFixed(3);
+    var now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     var b = st[0];
-    var isLive = source === 'iExit';
-    var srcTag = isLive
-      ? '<span class="src-tag src-live">🟢 iExit Live Data</span>'
-      : '<span class="src-tag src-ai">🤖 Claude AI Estimate</span>';
 
     var h = '<div class="summary">'
       + '<div class="scard"><div class="sval g">$' + mn.toFixed(3) + '</div><div class="slbl">Cheapest</div></div>'
@@ -254,29 +429,33 @@
       + '<div class="best-unit">' + fuel + ' · per gallon</div></div>'
       + '<div class="best-meta">'
       + '<span>📍 ' + b.distance.toFixed(1) + ' mi away</span>'
-      + '<span>💰 Save $' + (mx - b.price).toFixed(3) + '/gal vs highest</span>'
+      + '<span>💰 Save $' + (mx-b.price).toFixed(3) + '/gal vs highest</span>'
       + '</div></div>'
       + '<div class="list-hdr"><div class="list-title">All Stations Ranked</div></div>'
       + '<div class="stations">';
 
     for (var i = 0; i < st.length; i++) {
       var s = st[i];
-      h += '<div class="srow" style="animation-delay:' + (i * 0.04) + 's">'
-        + '<div class="srank">#' + (i + 1) + '</div>'
+      h += '<div class="srow" style="animation-delay:' + (i*.04) + 's">'
+        + '<div class="srank">#' + (i+1) + '</div>'
         + '<div class="sinfo">'
         + '<div class="sname">' + s.name + '</div>'
         + '<div class="saddr">' + s.address + '</div>'
         + '<div class="sdist">📍 ' + s.distance.toFixed(1) + ' mi</div>'
         + '</div>'
-        + '<div class="sprice ' + cls(s.price, mn, mx) + '">$' + s.price.toFixed(3) + '</div>'
+        + '<div class="sprice ' + cls(s.price,mn,mx) + '">$' + s.price.toFixed(3) + '</div>'
         + '</div>';
     }
 
-    h += '</div><div class="foot-row"><span>Updated ' + now + '</span>' + srcTag + '</div>';
+    h += '</div><div class="foot-row"><span>Updated ' + now + ' · ' + currentLocationName + '</span>'
+      + '<span class="src-tag">🏛️ US EIA Gov Data</span></div>';
     show(h);
   }
 
-  window.addEventListener('load', function() { go(); });
+  // Close suggestions on outside click
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-wrap')) hideSuggestions();
+  });
 </script>
 </body>
 </html>
