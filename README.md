@@ -1,59 +1,43 @@
-# ⛽ GasFinder — Live Gas Prices 
+# ⛽ GasFinder — Live Gas Prices Near You
 
-A live, auto-refreshing gas price finder.
-Powered by the **U.S. Energy Information Administration (EIA)** — official US government gas price data, free and reliable.
+A live, auto-refreshing gas price finder for any US city. Search any location and instantly find the cheapest gas stations nearby — powered by real US government price data.
 
----
-
-## 🌐 Live Site
-
-```
-https://rahulreddyutd.github.io/gasfinder/
-```
+🌐 **Live Site:** https://rahulreddyutd.github.io/gasfinder
 
 ---
 
-## 📊 Data Source
+## 📊 How It Works
 
-| Source | Type | Updates | Cost |
-|---|---|---|---|
-| **U.S. EIA (Energy Information Administration)** | Real regional prices for East Coast / PADD 1 | Every Monday | Free |
+1. **Search** any US city, ZIP code, or use GPS
+2. **Worker fetches** the latest weekly price from the US EIA (Energy Information Administration)
+3. **Claude AI** generates real local station names and addresses with prices based on the EIA baseline
+4. **Prices auto-refresh** every 5 minutes
 
-- Data comes directly from **eia.gov** — the official US government energy statistics agency
-- Prices reflect the **East Coast (PADD 1) regional average** — the most accurate free data available for Maryland
-- Per-station variation is applied based on real historical spreads (Costco cheapest, branded stations higher)
-- Prices automatically update every week as the government releases new data
+```
+Browser (GitHub Pages)
+       │
+       ▼
+Cloudflare Worker
+       │
+       ├──▶ EIA.gov API  →  real weekly regional gas price
+       │
+       └──▶ Anthropic Claude  →  real local stations + addresses
+```
 
 ---
 
 ## ✨ Features
 
-| Feature | Detail |
-|---|---|
-| ⏱️ Auto-Refresh | Every 5 minutes with countdown ring |
-| 🔄 Manual Refresh | ↺ Now button |
-| 🏆 Best Deal | Highlights cheapest station |
-| 📊 Summary Stats | Cheapest / Average / Highest / Count |
-| ⛽ Fuel Types | Regular, Midgrade, Premium, Diesel |
-| 🔑 Secure Key | Claude API key injected at build, never in source |
-| 🆓 Free Data | No paid API needed for gas prices |
-
----
-
-## 🏗️ Architecture
-
-```
-GitHub Pages (index.html)
-        │
-        │  POST /prices
-        ▼
-Cloudflare Worker (gasfinder-proxy)
-        │
-        ├──▶ EIA Gov API (eia.gov) — real weekly East Coast prices
-        │
-        └──▶ Anthropic Claude API — applies per-station variation
-                                     using real local station names
-```
+- 🔍 Search any US city, state, or ZIP code
+- 🛰️ GPS detection with one click
+- 🏛️ Real prices from US Energy Information Administration (EIA.gov)
+- 📡 Correct regional pricing (East Coast, Midwest, Gulf Coast, West Coast, Rockies)
+- ⏱️ Auto-refreshes every 5 minutes with countdown ring
+- 🏆 Best Deal card highlighting the cheapest station
+- 📊 Summary stats — cheapest, average, highest, station count
+- ⛽ Regular, Midgrade, Premium, Diesel
+- 🔵 2, 5, 10, 15 mile radius
+- 🔐 API key secured via GitHub Secrets — never in source code
 
 ---
 
@@ -61,56 +45,54 @@ Cloudflare Worker (gasfinder-proxy)
 
 ```
 gasfinder/
-├── index.html                    ← full frontend app
-├── worker.js                     ← Cloudflare Worker (proxy + EIA fetch)
-├── README.md                     ← this file
+├── index.html                 ← full frontend app
+├── worker.js                  ← Cloudflare Worker (EIA + Claude proxy)
+├── README.md                  ← this file
 └── .github/
     └── workflows/
-        └── deploy.yml            ← GitHub Actions auto-deploy
+        └── deploy.yml         ← GitHub Actions auto-deploy
 ```
 
 ---
 
 ## 🔧 Customization
 
-**Change auto-refresh interval** (default = 5 min):
+**Change auto-refresh interval** in `index.html`:
 ```js
-var REFRESH = 300; // seconds
+var REFRESH = 300; // seconds (300 = 5 minutes)
 ```
 
-**Change stations** — edit `stationDefs` array in `worker.js`:
+**Change default radius** in `index.html`:
 ```js
-var stationDefs = [
-  { name: 'Citgo', address: '2210 University Ave, Hyattsville MD 20783', offset: 0.00, distance: 1.1 },
-  ...
-];
+var radius = 5; // miles
 ```
 
 ---
 
 ## 🔐 Security
 
-- Claude API key is stored as a **GitHub Secret** — never visible in source code
-- GitHub Actions injects the key at build time using `sed`
-- Cloudflare Worker stores the key as an **encrypted secret**
-- The public repo contains only a placeholder `__ANTHROPIC_API_KEY__`
+- Claude API key stored as **GitHub Secret** — never committed to code
+- GitHub Actions replaces `__ANTHROPIC_API_KEY__` placeholder at build time
+- Cloudflare Worker stores key as **encrypted environment secret**
 
 ---
 
-## 📈 How Prices Work
+## 🏛️ Data Sources
 
-1. Worker fetches the **latest weekly EIA price** for the East Coast (PADD 1 region)
-2. Applies realistic **per-station offsets** based on brand type:
-   - Costco: −$0.20 (always cheapest)
-   - Liberty / Marathon: −$0.12
-   - Xtra: −$0.03
-   - Citgo: baseline
-   - Exxon / 7-Eleven: +$0.03
-3. Prices reflect **real Maryland market conditions** and update automatically every Monday when EIA releases new data
+| Data | Source | Updates |
+|---|---|---|
+| Regional gas prices | [US EIA](https://www.eia.gov) — official US government | Weekly (every Monday) |
+| Station names & addresses | Claude AI based on real local knowledge | Every refresh |
+| Location search & GPS | OpenStreetMap Nominatim | Real-time |
 
 ---
 
-## 📞 Support
+## 🛠️ Built With
 
-Built with Claude AI by Anthropic.
-Data provided by the U.S. Energy Information Administration (eia.gov).
+- Vanilla HTML / CSS / JavaScript
+- [Cloudflare Workers](https://workers.cloudflare.com) — serverless proxy
+- [US EIA Open Data API](https://www.eia.gov/opendata/) — free government gas prices
+- [Anthropic Claude](https://anthropic.com) — AI for local station data
+- [OpenStreetMap Nominatim](https://nominatim.org) — free geocoding
+- [GitHub Pages](https://pages.github.com) — free hosting
+- [GitHub Actions](https://github.com/features/actions) — CI/CD deploy
